@@ -107,6 +107,18 @@ ghost cursors show where the queued steps will act and move with the page. If a
 step fails, the rest of the batch is skipped (each still gets a tool result) and
 the model gets a fresh observation.
 
+## Actionability and settling (borrowed from browse)
+
+Before a ref click, the page script waits up to 2 s for the element to be
+visible, enabled and not moving, scrolls it into view, and checks that it is what
+sits under the click point. When something covers it, the click is refused with
+`covered: dialog "Cookies" is on top of it` and a hint to dismiss it, rather than
+clicking the overlay. With CDP on, ref clicks are sent as trusted input at that
+point. After each action the harness waits 75 ms for a navigation to start. If
+one did, it waits for the load. If not, it waits until the DOM has been quiet for
+80 ms (at most 800 ms), so the next read sees the finished page. Canvas-style
+steps skip that wait. Try it on `fixtures/actionability.html`.
+
 ## More cursor actions
 
 - `click` with `button: right` (page context menus; Chrome's native menu is never

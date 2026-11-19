@@ -1,0 +1,12 @@
+<!doctype html><meta charset=utf-8><title>act</title>
+<script>window.__l=null;window.chrome={runtime:{onMessage:{addListener:f=>window.__l=f}}};
+window.send=m=>new Promise(r=>window.__l(m,{},r));window.clicks=[];</script>
+<script src="../content/content.js"></script>
+<button id=ok onclick="clicks.push('ok')">OK</button>
+<button id=dis disabled onclick="clicks.push('dis')">Disabled</button>
+<button id=cov onclick="clicks.push('cov')">Covered</button>
+<div role=dialog aria-label="Cookies" style="position:fixed;left:0;top:0;width:100vw;height:60px;background:#0008"></div>
+<div style="height:1500px"></div>
+<button id=far onclick="clicks.push('far')">Far down</button>
+<label><input id=cb type=checkbox style="opacity:0;width:1px;height:1px;position:absolute"> <span>Agree</span></label>
+<script>document.getElementById('cov').style.cssText='position:fixed;left:10px;top:10px';</script>

@@ -118,3 +118,13 @@ test('a not_editable rejection tells the model to click the field first', async 
   assert.equal(res.error, 'not_editable');
   assert.match(res.note, /Click the field or cell first/);
 });
+
+test('a refusal from the page (covered target) is a clean rejection with a hint, not "uncertain"', async () => {
+  const page = shiftingPage();
+  page.driver.click = async () => { throw Object.assign(new Error('covered: dialog "Cookies" is on top of it'), { detail: { ok: false, error: 'covered: dialog "Cookies" is on top of it' } }); };
+  const { out, seen } = await runBatch([{ id: 'a', name: 'click', args: { ref: 3 } }], page);
+  const res = JSON.parse(seen[1].find(m => m.id === 'a').content);
+  assert.equal(res.kind, 'validation');
+  assert.match(res.note, /Close or dismiss it first/);
+  assert.ok(!out.steps.some(s => s.kind === 'uncertain'));
+});

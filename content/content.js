@@ -158,14 +158,63 @@
     if (b === 2) el.dispatchEvent(new MouseEvent('contextmenu', mouse(x, y, { button: 2, buttons: 0 })));
   }
 
+  // ---- Actionability (as browse/Playwright do it) ------------------------------
+  // Before acting on a ref: wait until it is visible, enabled and not moving, scroll
+  // it into view, and check that it (not an overlay) is what sits under the point.
+  const frame = () => new Promise(r => requestAnimationFrame(() => r()));
+  const deepAt = (x, y) => {
+    let el = document.elementFromPoint(x, y);
+    for (let inner; el?.shadowRoot && (inner = el.shadowRoot.elementFromPoint(x, y)) && inner !== el;) el = inner;
+    return el;
+  };
+  const within = (el, n) => { for (; n; n = n.parentNode || n.host) if (n === el) return true; return false; };
+  const sameBox = (a, b) => a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+  async function actionPoint(ref, timeout = 2000) {
+    const until = Date.now() + timeout;
+    let covers = 0;
+    for (;;) {
+      const el = byRef(ref);
+      if (!el?.isConnected) return { ok: false, error: 'stale_target' }; // refs are bound to nodes; it won't return
+      let why;
+      if (!isVisible(el)) why = 'not_visible';
+      else if (el.disabled || el.getAttribute('aria-disabled') === 'true') why = 'not_enabled';
+      else {
+        el.scrollIntoViewIfNeeded?.(true);
+        const a = el.getBoundingClientRect(); await frame(); const b = el.getBoundingClientRect();
+        if (!sameBox(a, b)) why = 'not_stable';
+        else {
+          const x = Math.round(b.x + b.width / 2), y = Math.round(b.y + b.height / 2);
+          const hit = deepAt(x, y);
+          if (!hit || within(el, hit) || [...(el.labels || [])].some(l => within(l, hit))) return { ok: true, x, y };
+          // A fading toast or a layout shift clears in a few tries; a modal does not.
+          if (++covers >= 3) return { ok: false, error: `covered: ${roleOf(hit)} "${nameOf(hit).slice(0, 50)}" is on top of it` };
+        }
+      }
+      if (Date.now() > until) return { ok: false, error: why || 'covered' };
+      await sleep(why ? 100 : 150);
+    }
+  }
+
+  // Resolves once the DOM has been quiet for `quiet` ms (or after `cap`), so the
+  // next read sees the page after the action, not halfway through re-rendering.
+  function settle(quiet = 80, cap = 800) {
+    return new Promise((resolve) => {
+      let t;
+      const done = () => { mo.disconnect(); clearTimeout(t); clearTimeout(hard); resolve({ ok: true }); };
+      const mo = new MutationObserver(() => { clearTimeout(t); t = setTimeout(done, quiet); });
+      mo.observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+      t = setTimeout(done, quiet);
+      const hard = setTimeout(done, cap);
+    });
+  }
+
   async function clickRef(ref, button, count) {
+    const p = await actionPoint(ref);
+    if (!p.ok) return p;
     const el = byRef(ref);
-    if (!el || !el.isConnected || !isVisible(el)) return { ok: false, error: 'stale_target' };
-    el.scrollIntoView({ block: 'center', inline: 'nearest' });
-    const [x, y] = center(el);
-    await moveCursor(x, y);
-    pulse(x, y);
-    fireClick(el, x, y, button, count);
+    await moveCursor(p.x, p.y);
+    pulse(p.x, p.y);
+    fireClick(el, p.x, p.y, button, count);
     return { ok: true, clicked: { ref, name: nameOf(el), button: button || 'left', count: count || 1 } };
   }
 
@@ -365,6 +414,8 @@
       case 'harness/ping': return { ok: true, pong: true };
       case 'harness/snapshot': return snapshot();
       case 'harness/clickRef': return clickRef(msg.ref, msg.button, Number(msg.count) || 1);
+      case 'harness/point': return actionPoint(msg.ref);
+      case 'harness/settle': return settle();
       case 'harness/clickPoint': return clickPoint(Number(msg.x), Number(msg.y), msg.button, Number(msg.count) || 1);
       case 'harness/typeText': return typeText(msg.ref, String(msg.text ?? ''));
       case 'harness/copy': return copyText(msg.ref);
