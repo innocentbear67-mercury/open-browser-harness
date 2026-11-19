@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Open Browser Harness",
+  "short_name": "Harness",
+  "version": "0.1.0",
+  "description": "Model-agnostic browser agent: observe, propose, validate, execute, verify.",
+  "minimum_chrome_version": "116",
+  "permissions": ["activeTab", "scripting", "tabs", "storage", "sidePanel", "debugger"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_title": "Open Browser Harness" },
+  "side_panel": { "default_path": "sidepanel/panel.html" }
+}

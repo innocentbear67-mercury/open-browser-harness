@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness</title>
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+<header class="topbar">
+  <div id="tabInfo" class="chip muted" title="">No tab detected</div>
+  <nav class="icons">
+    <button id="historyBtn" class="icon" title="Past sessions" aria-label="Past sessions">
+      <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg>
+    </button>
+    <button id="newBtn" class="icon" title="New session" aria-label="New session">
+      <svg viewBox="0 0 24 24"><path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.6A7.5 7.5 0 1 1 20 11.5z"/><path d="M12.5 8.5v6M9.5 11.5h6"/></svg>
+    </button>
+    <button id="settingsBtn" class="icon" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </nav>
+</header>
+
+<main id="thread">
+  <div id="empty" class="empty">
+    <p class="empty-title">What should I do on this page?</p>
+    <p class="muted">Describe a task. I read the tab, act, and check the result. Changes ask for your approval first.</p>
+  </div>
+  <div id="log" class="log" aria-live="polite"></div>
+</main>
+
+<div class="dock">
+  <div id="resume" class="banner" hidden>
+    <span id="resumeText">An interrupted run was found.</span>
+    <div class="banner-actions">
+      <button id="resumeBtn" class="pill">Resume</button>
+      <button id="discardBtn" class="link">Discard</button>
+    </div>
+  </div>
+
+  <div id="approvalCard" class="banner warn" hidden>
+    <div>
+      <strong>Approval needed</strong>
+      <p id="approvalText"></p>
+      <p class="hint">Bound to this tab, target and effect. Expires on tab change or after 60s. "For this task" repeats it only for the same action on the same target, until the run ends.</p>
+    </div>
+    <div class="banner-actions">
+      <button id="allowBtn" class="pill solid">Allow once</button>
+      <button id="allowTaskBtn" class="pill" title="Approve this same action on this same target for the rest of this task">Allow for this task</button>
+      <button id="denyBtn" class="pill">Deny</button>
+    </div>
+  </div>
+
+  <form id="composer" class="composer">
+    <textarea id="task" rows="1" placeholder="What should I do on this page?"></textarea>
+    <div class="composer-row">
+      <div class="left">
+        <button type="button" id="approvalPill" class="mode" title="Toggle approval for changes">
+          <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z"/></svg>
+          <span id="approvalPillText">Ask first</span>
+        </button>
+      </div>
+      <div class="right">
+        <button type="button" id="modelLabel" class="model" title="Model settings">model</button>
+        <button type="submit" id="startBtn" class="send" title="Start (Enter)" aria-label="Start">
+          <svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+        </button>
+        <button type="button" id="stopBtn" class="send stop" title="Stop" aria-label="Stop" hidden disabled>
+          <svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+  </form>
+  <div class="meta"><span id="status">idle</span> · <span>Steps <b id="steps">0</b></span> · <span>Spend <b id="spend">$0.000</b></span></div>
+</div>
+
+<!-- Settings sheet -->
+<section id="settingsView" class="sheet" hidden>
+  <header class="sheet-head">
+    <button class="icon" data-close title="Back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1>Settings</h1>
+  </header>
+  <div class="sheet-body">
+    <h2>Model</h2>
+    <label>Quick setup
+      <select id="preset"><option value="">Custom</option></select>
+    </label>
+    <p class="hint" id="presetNote" hidden></p>
+    <label>Provider
+      <select id="provider">
+        <option value="openai-compatible">OpenAI-compatible (OpenRouter / DeepSeek / Groq / local)</option>
+        <option value="openai">OpenAI Responses</option>
+        <option value="anthropic">Anthropic Messages</option>
+        <option value="gemini">Gemini</option>
+      </select>
+    </label>
+    <label>Key source
+      <select id="keySource">
+        <option value="session">Saved in this browser</option>
+        <option value="companion">Native companion (OS keychain)</option>
+      </select>
+    </label>
+    <div id="endpointRow" hidden>
+      <label>Base URL <input id="endpoint" type="url" placeholder="https://openrouter.ai/api/v1" spellcheck="false"></label>
+    </div>
+    <label>Model ID <input id="model" list="modelList" placeholder="pick or type a model id" spellcheck="false" autocomplete="off"></label>
+    <datalist id="modelList"></datalist>
+    <p class="hint" id="modelHint" hidden></p>
+    <label>API key <input id="key" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false"></label>
+    <p class="hint" id="keyHint">Key is saved in this browser profile and sent only to the provider above.</p>
+    <div class="row">
+      <button id="testBtn" class="pill">Test capabilities</button>
+      <span id="caps" class="caps muted">not tested</span>
+    </div>
+
+    <h2>Run</h2>
+    <label class="check"><input type="checkbox" id="vision" checked> Screenshots (vision models)</label>
+    <label class="check"><input type="checkbox" id="cdpMode"> CDP input — real mouse/keys for canvas and drag</label>
+    <label class="check"><input type="checkbox" id="requireApproval" checked> Ask before changes (submit, pay, delete, new sites)</label>
+    <div class="grid">
+      <label>Max steps <input id="maxSteps" type="number" min="1" max="100" value="30"></label>
+      <label>Max spend (USD) <input id="maxSpend" type="number" min="0" step="0.01" value="0.50"></label>
+    </div>
+    <div class="grid">
+      <label>Input $/M tokens <input id="priceIn" type="number" min="0" step="0.01" placeholder="enables spend cap"></label>
+      <label>Output $/M tokens <input id="priceOut" type="number" min="0" step="0.01" placeholder="enables spend cap"></label>
+    </div>
+
+    <details>
+      <summary>Last page data sent to the provider</summary>
+      <pre id="sentData">Nothing sent yet.</pre>
+    </details>
+  </div>
+</section>
+
+<!-- Past sessions sheet -->
+<section id="historyView" class="sheet" hidden>
+  <header class="sheet-head">
+    <button class="icon" data-close title="Back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <h1>Past sessions</h1>
+  </header>
+  <div class="sheet-body">
+    <ul id="historyList" class="history"></ul>
+  </div>
+</section>
+
+<script type="module" src="panel.js"></script>
+</body>
+</html>
