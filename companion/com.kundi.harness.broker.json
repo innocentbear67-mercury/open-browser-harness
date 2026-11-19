@@ -1,7 +1,7 @@
 {
   "name": "com.kundi.harness.broker",
   "description": "Open Browser Harness credential broker",
-  "path": "/Users/wangkundi/ai-browser-harness/companion/broker.py",
+  "path": "/ABSOLUTE/PATH/TO/REPO/companion/broker.py",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://REPLACE_WITH_YOUR_EXTENSION_ID/"

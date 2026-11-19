@@ -11,11 +11,11 @@ compatible model. Milestones 4–6 are still open (see *Not in this build*).
 ## Load it
 
 1. Open `chrome://extensions`, enable **Developer mode**.
-2. **Load unpacked** → select `/Users/wangkundi/ai-browser-harness`.
+2. **Load unpacked** → select this repository's root directory.
 3. Click the toolbar icon to open the side panel.
-4. Serve the demo dashboard (file:// needs "Allow access to file URLs"):
+4. From the repo root, serve the demo dashboard (file:// needs "Allow access to file URLs"):
    ```bash
-   python3 -m http.server 8765 --directory /Users/wangkundi/ai-browser-harness/fixtures
+   python3 -m http.server 8765 --directory ./fixtures
    ```
    Open `http://localhost:8765/dashboard.html` in a tab.
 
@@ -30,8 +30,9 @@ provider without browser CORS support will fail — use the companion below.
 **Companion mode (keys outside Chrome):** keys go into the macOS Keychain and all
 provider HTTP requests are made by a local Native Messaging host.
 1. Find the extension ID on `chrome://extensions` (Developer mode).
-2. Replace `REPLACE_WITH_YOUR_EXTENSION_ID` in
-   `companion/com.kundi.harness.broker.json` with that 32-character ID.
+2. In `companion/com.kundi.harness.broker.json`, replace
+   `REPLACE_WITH_YOUR_EXTENSION_ID` with that 32-character ID, and set `"path"`
+   to the absolute path of `companion/broker.py` on your machine.
 3. Copy it to `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/`.
 4. Select **Native companion** as the key source, then store a key by sending one
    framed JSON message:
@@ -184,4 +185,4 @@ and no real paid provider call was made. Those need your one-time load + key.
 
 ## Files
 
-`/Users/wangkundi/ai-browser-harness` — run `npm test` from that directory.
+Run `npm test` from the repo root.
